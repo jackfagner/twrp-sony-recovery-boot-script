@@ -158,4 +158,4 @@ busybox rm -f /bootrec/extract_elf_ramdisk /bootrec/init.sh /bootrec/busybox
 export PATH="${_PATH}"
 
 # All done, now boot
-exec /init
+exec /init $@
