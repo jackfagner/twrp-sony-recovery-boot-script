@@ -3,7 +3,7 @@
 ########################################
 # Sony FOTAKernel Recovery Boot Script #
 #    Author: github.com/jackfagner     #
-#             Version: 1.1             #
+#             Version: 1.2             #
 ########################################
 
 # Disable printing/echo of commands
@@ -115,15 +115,15 @@ if [ ${KEY_EVENT_DATA_LENGTH} -gt ${MIN_KEY_EVENT_DATA_LENGTH} ] || busybox grep
   # Make sure root is in read-write mode
   busybox mount -o remount,rw /
 
-  # extract_elf_ramdisk needs sh in PATH, so let's make sure it is there
-  busybox test ! -e /sbin/sh && CREATE_SH=1
-  busybox test "${CREATE_SH}" && busybox ln -sf /sbin/busybox /sbin/sh
+  # extract_elf_ramdisk needs sh in PATH
+  # FIXME: unconfirmed! We can probably skip sh
+  busybox ln -sf /bootrec/busybox /bootrec/sh
 
   # Extract recovery ramdisk
   extract_elf_ramdisk -i ${DEV_FOTA} -o ${RECOVERY_CPIO} -t /
 
   # Remove sh again (if we created it)
-  busybox test "${CREATE_SH}" && busybox rm -f /sbin/sh
+  busybox rm -f /bootrec/sh
 
   # Clean up rc scripts in root to avoid problems
   busybox rm -f /init*.rc /init*.sh
