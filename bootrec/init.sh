@@ -19,12 +19,10 @@ DEV_FOTA_NODE="/dev/block/mmcblk0p32 b 259 0"
 DEV_FOTA="/dev/block/mmcblk0p32"
 
 LOG_FILE="/bootrec/boot-log.txt"
-KEYLOG_FILE="/bootrec/boot-key-events.txt"
 RECOVERY_CPIO="/bootrec/recovery.cpio"
 
 KEY_EVENT_DELAY=3
 WARMBOOT_RECOVERY=0x77665502
-MIN_KEY_EVENT_DATA_LENGTH=32
 
 LED_RED="/sys/class/leds/led:rgb_red/brightness"
 LED_GREEN="/sys/class/leds/led:rgb_green/brightness"
@@ -91,7 +89,7 @@ led_off() {
 led_amber
 
 # keycheck
-busybox timeout -t 3 keycheck
+busybox timeout -t ${KEY_EVENT_DELAY} keycheck
 
 # Check if we detected volume key pressing or the user rebooted into recovery mode
 if [ $? -eq 42 ] || busybox grep -q warmboot=${WARMBOOT_RECOVERY} /proc/cmdline; then
