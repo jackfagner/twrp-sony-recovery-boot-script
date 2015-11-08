@@ -17,8 +17,6 @@ REAL_INIT="/init.real"
 
 DEV_FOTA_NODE="/dev/block/mmcblk0p32 b 259 0"
 DEV_FOTA="/dev/block/mmcblk0p32"
-DEV_EVENT_NODE="/dev/input/event5 c 13 69"
-DEV_EVENT="/dev/input/event5"
 
 LOG_FILE="/bootrec/boot-log.txt"
 KEYLOG_FILE="/bootrec/boot-key-events.txt"
@@ -62,7 +60,10 @@ busybox mkdir -m 555 -p /proc
 busybox mkdir -m 755 -p /sys
 
 # Create device nodes
-busybox mknod -m 600 ${DEV_EVENT_NODE}
+# Per linux Documentation/devices.txt
+for i in $(busybox seq 0 12); do
+	busybox mknod -m 600 /dev/input/event${i} c 13 $(busybox expr 64 + ${i})
+done
 busybox mknod -m 666 /dev/null c 1 3
 
 # Mount filesystems
@@ -86,23 +87,14 @@ led_off() {
   busybox echo   0 > ${LED_BLUE}
 }
 
-# Start listening for key events
-busybox cat ${DEV_EVENT} > ${KEYLOG_FILE} &
-
 # Set LED to amber to indicate it's time to press keys
 led_amber
 
-# Sleep for a while to collect key events
-busybox sleep ${KEY_EVENT_DELAY}
+# keycheck
+busybox timeout -t 3 keycheck
 
-# Data collected, kill key event collector
-busybox pkill -f "cat ${DEV_EVENT}"
-
-# Count collected data length
-KEY_EVENT_DATA_LENGTH=`busybox wc -c <${KEYLOG_FILE}`
-
-# Check if we collected enough key event data or the user rebooted into recovery mode
-if [ ${KEY_EVENT_DATA_LENGTH} -gt ${MIN_KEY_EVENT_DATA_LENGTH} ] || busybox grep -q warmboot=${WARMBOOT_RECOVERY} /proc/cmdline; then
+# Check if we detected volume key pressing or the user rebooted into recovery mode
+if [ $? -eq 42 ] || busybox grep -q warmboot=${WARMBOOT_RECOVERY} /proc/cmdline; then
   echo "Entering Recovery Mode" >> ${LOG_FILE}
 
   # Set LED to orange to indicate recovery mode
@@ -147,9 +139,6 @@ led_off
 busybox umount /proc
 busybox umount /sys
 busybox rm -rf /dev/*
-
-# Set permissions to avoid security problems
-busybox chmod 644 ${LOG_FILE} ${KEYLOG_FILE}
 
 # Remove dangerous files to avoid security problems
 busybox rm -f /bootrec/extract_elf_ramdisk /bootrec/init.sh /bootrec/busybox
