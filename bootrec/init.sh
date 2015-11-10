@@ -88,7 +88,7 @@ led_off() {
 # Set LED to amber to indicate it's time to press keys
 led_amber
 
-# keycheck
+# Keycheck will exit with code 42 if vol up/down is pressed
 busybox timeout -t ${KEY_EVENT_DELAY} keycheck
 
 # Check if we detected volume key pressing or the user rebooted into recovery mode
@@ -139,7 +139,7 @@ busybox umount /sys
 busybox rm -rf /dev/*
 
 # Remove dangerous files to avoid security problems
-busybox rm -f /bootrec/extract_elf_ramdisk /bootrec/init.sh /bootrec/busybox
+busybox rm -f /bootrec/extract_elf_ramdisk /bootrec/init.sh /bootrec/busybox /bootrec/keycheck
 
 # Reset PATH
 export PATH="${_PATH}"
